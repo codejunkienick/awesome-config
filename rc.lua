@@ -72,7 +72,7 @@ run_once("urxvtd")
 run_once("unclutter -root")
 
 
-beautiful.init(os.getenv("HOME") .. "/.config/awesome/themes/steamburn/theme.lua")
+beautiful.init(os.getenv("HOME") .. "/.config/awesome/theme/theme.lua")
 
 -- common
 modkey     = "Mod4"
@@ -83,9 +83,9 @@ editor     = os.getenv("EDITOR") or "vim" or "vi"
 editor_cmd = terminal .. " -e " .. editor
 
 -- user defined
-browser2    = "firefox"
-browser   = "chromium"
-music_player = "clementine"
+browser2    = "chromium"
+browser   = "firefox-aurora"
+music_player = "ncmpcpp"
 
 -- lain
 lain.layout.termfair.nmaster = 3
@@ -105,10 +105,10 @@ local layouts = {
     lain.layout.termfair,
     lain.layout.uselesspiral.dwindle,
     lain.layout.centerwork,
-    vain.layout.browse,
 
     awful.layout.suit.magnifier,
     lain.layout.centerfair,
+    awful.layout.suit.floating
 }
 -- }}}
 do
@@ -149,20 +149,23 @@ tyrannical.tags = {
             {
               name        = "term"      ,
               init        = true        ,
+              screen      = 1,
               exclusive   = true        ,
               layout      = layouts[3] ,
               class       = {"termite", "XTerm"}
             },
             {
               name        = "web"             ,
+              screen      = 1,
               init        = true              ,
               exclusive   = false             ,
               mwfact      = 0.70              ,
-              layout      = layouts[7]       ,
+              layout      = layouts[1]       ,
               class       = {"Firefox", "brave" ,"chromium", "Google-chrome", "Tor Browser", "termite:web", "Midori"}
             },
             {
               name        = "edit"       ,
+              screen      = 1,
               init        = true        ,
               exclusive   = true       ,
               layout      = layouts[3],
@@ -170,11 +173,12 @@ tyrannical.tags = {
             },
             {
               name        = "dev"       ,
+              screen      = 1,
               init        = true        ,
               exclusive   = false       ,
-              mwfact      = 0.75,
-              ncol        = 2,
-              layout      = layouts[7],
+              mwfact      = 0.25,
+              ncol        = 1,
+              layout      = layouts[3],
               class       = {"jetbrains-pycharm-ce", "jetbrains-pycharm", "jetbrains-webstorm", "MonoDevelop", "Code::Blocks", "Scala IDE", "Codelite", "Atom", "Java", "jetbrains-idea-ce", "LocalTestRunner", "jetbrains-idea-c", "jetbrains-idea", "Code", "jetbrains-rider"}
             },
             {
@@ -195,12 +199,13 @@ tyrannical.tags = {
             },
             {
               name        = "docs"     ,
+              screen      = 1,
               init        = true        ,
               exclusive   = true        ,
               layout      = layouts[7] ,
               mwfact      = 0.65,
               class       = {
-                      "MuPDF"     , "Qpdfview"         , "Evince"    , "EPDFviewer"   , "xpdf",
+                      "MuPDF", "llpp"     , "Qpdfview"         , "Evince"    , "EPDFviewer"   , "xpdf",
                       "Xpdf"          , "libreoffice-writer", "libreoffice-calc", "LibreOffice 5.0", "libreoffice", "libreoffice-startcenter", "libreoffice-impress" }
             },
             {
@@ -210,14 +215,6 @@ tyrannical.tags = {
               layout      = layouts[7] ,
               mwfact      = 0.65,
               class       =  {}
-            },
-            {
-              name        = "great"     ,
-              init        = true        ,
-              exclusive   = false        ,
-              layout      = layouts[7] ,
-              mwfact      = 0.60,
-              class       =  {"termite:great"}
             },
             {
               name        = "dj"     ,
@@ -279,9 +276,9 @@ tyrannical.tags = {
               init                 = false         ,
               position             = 10            ,
               exclusive            = true          ,
-              layout               = layouts[1]    ,
+              layout               = layouts[3]    ,
               no_focus_stealing_in = true ,
-              class       = {"Mpv", "Amarok"        , "SongBird"       , "last.fm"   ,}
+              class       = {"Mpv", "Amarok"        , "SongBird"       , "last.fm", "Gpodder"   ,"Pragha"}
             },
             {
               name        = "office",
@@ -302,8 +299,8 @@ tyrannical.tags = {
                 exclusive   = true                                           ,
                 screen      = 1,--config.data().scr.sec or config.data().scr.sec ,
                 --   icon        = utils.tools.invertedIconPath("chat.png")       ,
-                layout      = layouts[7]                         ,
-                class       = {"Cutegram", "telegram", "Pidgin"        , "Kopete"         , "Skype"}
+                layout      = layouts[3]                         ,
+                class       = {"discord", "Cutegram", "telegram", "Pidgin"        , "Kopete"         , "Skype"}
               } ,
               {
                 name        = "mail",
@@ -321,8 +318,8 @@ tyrannical.tags = {
                 position    = 10                                             ,
                 exclusive   = false                                          ,
                 --   icon        = utils.tools.invertedIconPath("tools.png")      ,
-                layout      = awful.layout.suit.max                        ,
-                class       = {"Systemsettings", "Pavucontrol", "Android SDK Manager", "gconf-editor"}
+                layout      = layouts[10]                        ,
+                class       = {"Systemsettings", "Pavucontrol", "Android SDK Manager", "gconf-editor", "Arandr"}
               } ,
               {
                 name        = "Gimp",
@@ -341,23 +338,26 @@ tyrannical.tags = {
 tyrannical.properties.intrusive = {
     "Gpick",    "ksnapshot"     , "pinentry"       , "gtksu"     , "kcalc"        , "xcalc"           ,
     "feh"           , "Gradient editor", "About KDE" , "Paste Special", "Background color",
-    "kcolorchooser" , "plasmoidviewer" , "plasmaengineexplorer" , "Xephyr" , "kruler"     , "gnome-calculator", "conky", "Conky"
+    "kcolorchooser" , "plasmoidviewer" , "plasmaengineexplorer" , "Xephyr" , "kruler"     , "gnome-calculator", "conky", "Conky", "Gnome-pomodoro", "Vlc"
 }
 tyrannical.properties.floating = {
     "Gpick", "MPlayer"      , "pinentry"        , "ksnapshot"  , "pinentry"     , "gtksu"          ,
     "xine"         , "feh"             , "kmix"       , "kcalc"        , "xcalc"          ,
     "yakuake"      , "Select Color$"   , "kruler"     , "kcolorchooser", "Paste Special"  ,
-    "New Form"     , "Insert Picture"  , "kcharselect", "mythfrontend" , "plasmoidviewer" , "gnome-calculator", "conky", "Conky"
+    "New Form"     , "Insert Picture"  , "kcharselect", "mythfrontend" , "plasmoidviewer" , "gnome-calculator", "conky", "Conky", "Gnome-pomodoro", "Vlc"
 }
 tyrannical.properties.sticky = {
-  "conky", "Conky"
+  "conky", "Conky", "Vlc"
 }
 
 tyrannical.properties.ontop = {
-    "Xephyr"       , "ksnapshot"       , "kruler"
+    "Xephyr"       , "ksnapshot"       , "kruler", "Vlc"
 }
 
 tyrannical.properties.size_hints_honor = { xterm = false, URxvt = false, aterm = false, sauer_client = false, mythfrontend  = false}
+tyrannical.properties.focusable = { Vlc = false }
+tyrannical.properties.above = { Vlc = true }
+
 
 -- {{{ Wallpaper
 if beautiful.wallpaper then
@@ -456,7 +456,7 @@ batwidget = lain.widgets.bat({
 })
 
 musicwidget = awesompd:create() -- Create awesompd widget
-musicwidget.font = "Consolas" -- Set widget font 
+musicwidget.font = "Lucida Grande" -- Set widget font 
 musicwidget.scrolling = true -- If true, the text in the widget will be scrolled
 musicwidget.output_size = 30 -- Set the size of widget in symbols
 musicwidget.update_interval = 10 -- Set the update interval in seconds
@@ -494,12 +494,14 @@ musicwidget.servers = {
   { "", awesompd.MOUSE_SCROLL_UP, musicwidget:command_volume_up() },
   { "", awesompd.MOUSE_SCROLL_DOWN, musicwidget:command_volume_down() },
   { "", awesompd.MOUSE_RIGHT, musicwidget:command_show_menu() },
-  { "", "XF86AudioLowerVolume", musicwidget:command_volume_down() },
-  { "", "XF86AudioRaiseVolume", musicwidget:command_volume_up() },
+  { "Control", "XF86AudioLowerVolume", musicwidget:command_volume_down() },
+  { "Control", "XF86AudioRaiseVolume", musicwidget:command_volume_up() },
   { modkey, "Pause", musicwidget:command_playpause() } })
   musicwidget:run() -- After all configuration is done, run the widget
 
-netwidget = blingbling.net({interface = "wlp4s0", show_text = true})
+netwidget = blingbling.net({interface = "wlp4s0", show_text = false})
+netwidget_adapter = blingbling.net({interface = "wlp0s20u5", show_text = true})
+netwidget_adapter:set_ippopup() 
 netwidget:set_ippopup()
 
 -- shutdown=blingbling.system.shutdownmenu(beautiful.shutdown,
@@ -625,6 +627,7 @@ for s = 1, screen.count() do
     right_layout:add(batwidget)
     right_layout:add(APW)
     right_layout:add(netwidget)
+    right_layout:add(netwidget_adapter)
     right_layout:add(mytextclock)
     -- Now bring it all together (with the tasklist in the middle)
     local layout = wibox.layout.align.horizontal()
@@ -656,7 +659,7 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey }, "Escape", awful.tag.history.restore),
 
     -- Lock-screen binding
-    awful.key({ modkey, "Shift" }, "p", function () run_once('xscreensaver-command -lock') end),
+    awful.key({ modkey, "Shift" }, "p", function () run_once('xscreensaver-command --lock') end),
 
     -- Non-empty tag browsing
     awful.key({ altkey }, "Left", function () lain.util.tag_view_nonempty(-1) end),
@@ -692,7 +695,7 @@ globalkeys = awful.util.table.join(
         end),
     awful.key({ modkey }, "l",
         function()
-            ful.client.focus.bydirection("right")
+            awful.client.focus.bydirection("right")
             if client.focus then client.focus:raise() end
         end),
 
@@ -756,6 +759,7 @@ globalkeys = awful.util.table.join(
     -- awful.key({ altkey,           }, "h",      function () fshomeupd.show(7) end),
     -- awful.key({ altkey,           }, "w",      function () yawn.show(7) end),
 
+   awful.key({ }, "Print", function() awful.util.spawn_with_shell("import -window root ~/Screenshots/shot-(date +%F)--(date +%T).png") end),
    awful.key({ }, "XF86AudioRaiseVolume",  APW.Up),
    awful.key({ }, "XF86AudioLowerVolume",  APW.Down),
    awful.key({ }, "XF86MonBrightnessUp", function() awful.util.spawn_with_shell("xbacklight + 10%") end),
@@ -794,7 +798,6 @@ globalkeys = awful.util.table.join(
     -- User programs
     awful.key({ modkey }, "q", function () awful.util.spawn(browser) end),
     awful.key({ modkey }, "i", function () awful.util.spawn(browser2) end),
-    awful.key({ modkey }, "g", function () awful.util.spawn(music_player) end),
 
     -- Prompt
     awful.key({ modkey }, "r", function () mypromptbox[mouse.screen]:run({ prompt = "Run: ", hooks = {
@@ -922,6 +925,10 @@ awful.rules.rules = {
          ontop = false,
          focusable = false
        } },
+       { rule = { class = "Vlc" },
+       properties = {
+         focusable = false
+       } },
 --     { rule = { class = "URxvt" },
 --           properties = { opacity = 0.99 } },
 --
@@ -999,7 +1006,8 @@ client.connect_signal("manage", function (c, startup)
     -- Enable sloppy focus
     client.connect_signal("mouse::enter", function(c)
          if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
-            and awful.client.focus.filter(c) then
+            and awful.client.focus.filter(c)
+            and c.focusable == true then
              -- Skip focusing the client if the mouse wasn't moved.
              if c ~= sloppyfocus_last.c then
                  client.focus = c

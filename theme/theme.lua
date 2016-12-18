@@ -8,10 +8,10 @@
 
 theme                               = {}
 
-themes_dir                          = os.getenv("HOME") .. "/.config/awesome/themes/steamburn"
-theme.wallpaper                     = "/usr/share/backgrounds/nightsky_seatle.jpg"
+themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
+theme.wallpaper                     = themes_dir ..  "/wallpapers/path.jpg" 
 
-theme.font                          = "Consolas 12"
+theme.font                          = "Lucida Grande 10"
 theme.colors = {}
 theme.colors.base3   = "#002b36ff"
 theme.colors.base2   = "#073642ff"
@@ -36,7 +36,7 @@ theme.fg_normal  = theme.colors.base02
 theme.fg_focus   = theme.colors.base03
 theme.fg_urgent  = theme.colors.base3
 
-theme.bg_normal  = "#002b36aa"
+theme.bg_normal  = "#002b36ff"
 theme.bg_focus   = "#586e75dd"
 theme.bg_urgent  = theme.colors.red
 theme.bg_systray = "#002b36dd"
