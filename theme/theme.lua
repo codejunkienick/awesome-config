@@ -8,10 +8,24 @@
 
 theme                               = {}
 
-themes_dir                          = os.getenv("HOME") .. "/.config/awesome/theme"
-theme.wallpaper                     = themes_dir ..  "/wallpapers/path.jpg" 
+theme.dir                         = os.getenv("HOME") .. "/.config/awesome/theme"
+theme.wallpaper                     = theme.dir ..  "/wallpapers/path.jpg" 
 
 theme.font                          = "Lucida Grande 10"
+theme.taglist_font                              = "Icons 10"
+theme.fg_normal                                 = "#747474"
+theme.fg_focus                                  = "#DDDCFF"
+theme.bg_normal                                 = "#121212"
+theme.bg_focus                                  = "#121212"
+theme.fg_urgent                                 = "#CC9393"
+theme.bg_urgent                                 = "#2A1F1E"
+theme.border_width                              = "0"
+theme.border_normal                             = "#121212"
+theme.border_focus                              = "#292929"
+theme.titlebar_bg_focus                         = "#292929"
+theme.taglist_fg_focus                          = "#dddcff"
+theme.taglist_bg_focus                          = "#121212"
+
 theme.colors = {}
 theme.colors.base3   = "#002b36ff"
 theme.colors.base2   = "#073642ff"
@@ -29,30 +43,81 @@ theme.colors.violet  = "#6c71c4ff"
 theme.colors.blue    = "#268bd2ff"
 theme.colors.cyan    = "#2aa198ff"
 theme.colors.green   = "#859900ff"
+
+theme.menu_submenu_icon                         = theme.dir .. "/icons/submenu.png"
+
+theme.awesome_icon                              = theme.dir .."/icons/awesome.png"
+theme.taglist_squares_sel                       = theme.dir .. "/icons/square_sel.png"
+theme.taglist_squares_unsel                     = theme.dir .. "/icons/square_unsel.png"
+
+theme.layout_tile                               = theme.dir .. "/icons/tile.png"
+theme.layout_tileleft                           = theme.dir .. "/icons/tileleft.png"
+theme.layout_tilebottom                         = theme.dir .. "/icons/tilebottom.png"
+theme.layout_tiletop                            = theme.dir .. "/icons/tiletop.png"
+theme.layout_fairv                              = theme.dir .. "/icons/fairv.png"
+theme.layout_fairh                              = theme.dir .. "/icons/fairh.png"
+theme.layout_spiral                             = theme.dir .. "/icons/spiral.png"
+theme.layout_dwindle                            = theme.dir .. "/icons/dwindle.png"
+theme.layout_max                                = theme.dir .. "/icons/max.png"
+theme.layout_fullscreen                         = theme.dir .. "/icons/fullscreen.png"
+theme.layout_magnifier                          = theme.dir .. "/icons/magnifier.png"
+theme.layout_floating                           = theme.dir .. "/icons/floating.png"
+
+theme.tasklist_plain_task_name                  = true
+theme.tasklist_disable_icon                     = true
+
+theme.useless_gap                               = 5
+
+theme.titlebar_close_button_focus               = theme.dir .. "/icons/titlebar/close_focus.png"
+theme.titlebar_close_button_normal              = theme.dir .. "/icons/titlebar/close_normal.png"
+theme.titlebar_ontop_button_focus_active        = theme.dir .. "/icons/titlebar/ontop_focus_active.png"
+theme.titlebar_ontop_button_normal_active       = theme.dir .. "/icons/titlebar/ontop_normal_active.png"
+theme.titlebar_ontop_button_focus_inactive      = theme.dir .. "/icons/titlebar/ontop_focus_inactive.png"
+theme.titlebar_ontop_button_normal_inactive     = theme.dir .. "/icons/titlebar/ontop_normal_inactive.png"
+theme.titlebar_sticky_button_focus_active       = theme.dir .. "/icons/titlebar/sticky_focus_active.png"
+theme.titlebar_sticky_button_normal_active      = theme.dir .. "/icons/titlebar/sticky_normal_active.png"
+theme.titlebar_sticky_button_focus_inactive     = theme.dir .. "/icons/titlebar/sticky_focus_inactive.png"
+theme.titlebar_sticky_button_normal_inactive    = theme.dir .. "/icons/titlebar/sticky_normal_inactive.png"
+theme.titlebar_floating_button_focus_active     = theme.dir .. "/icons/titlebar/floating_focus_active.png"
+theme.titlebar_floating_button_normal_active    = theme.dir .. "/icons/titlebar/floating_normal_active.png"
+theme.titlebar_floating_button_focus_inactive   = theme.dir .. "/icons/titlebar/floating_focus_inactive.png"
+theme.titlebar_floating_button_normal_inactive  = theme.dir .. "/icons/titlebar/floating_normal_inactive.png"
+theme.titlebar_maximized_button_focus_active    = theme.dir .. "/icons/titlebar/maximized_focus_active.png"
+theme.titlebar_maximized_button_normal_active   = theme.dir .. "/icons/titlebar/maximized_normal_active.png"
+theme.titlebar_maximized_button_focus_inactive  = theme.dir .. "/icons/titlebar/maximized_focus_inactive.png"
+theme.titlebar_maximized_button_normal_inactive = theme.dir .. "/icons/titlebar/maximized_normal_inactive.png"
+
+theme.lain_icons         = os.getenv("HOME") ..
+                           "/.config/awesome/lain/icons/layout/zenburn/"
+theme.layout_termfair    = theme.lain_icons .. "termfair.png"
+theme.layout_centerfair  = theme.lain_icons .. "centerfair.png"  -- termfair.center
+theme.layout_cascade     = theme.lain_icons .. "cascade.png"
+theme.layout_cascadetile = theme.lain_icons .. "cascadetile.png" -- cascade.tile
+theme.layout_centerwork  = theme.lain_icons .. "centerwork.png"
+theme.layout_centerhwork = theme.lain_icons .. "centerworkh.png" -- centerwork.horizontal
+
 -- }}}
 
 -- {{{ Colors
-theme.fg_normal  = theme.colors.base02
-theme.fg_focus   = theme.colors.base03
-theme.fg_urgent  = theme.colors.base3
-
-theme.bg_normal  = "#002b36ff"
-theme.bg_focus   = "#586e75dd"
-theme.bg_urgent  = theme.colors.red
+-- theme.fg_normal  = theme.colors.base02
+-- theme.fg_focus   = theme.colors.base03
+-- theme.fg_urgent  = theme.colors.base3
+--
+-- theme.bg_normal  = "#002b36ff"
+-- theme.bg_focus   = "#586e75dd"
+-- theme.bg_urgent  = theme.colors.red
 theme.bg_systray = "#002b36dd"
 -- }}}
 
 -- {{{ Borders
-theme.border_width  = "2"
 theme.border_normal = theme.bg_normal
 theme.border_focus  = theme.bg_focus
 theme.border_marked = theme.bg_urgent
-theme.useless_gap_width = 5
 -- }}}
 
 -- {{{ Titlebars
-theme.titlebar_bg_focus  = theme.bg_focus
-theme.titlebar_bg_normal = theme.bg_normal
+-- theme.titlebar_bg_focus  = theme.bg_focus
+-- theme.titlebar_bg_normal = theme.bg_normal
 -- }}}
 
 -- {{{ Mouse finder
@@ -62,44 +127,13 @@ theme.mouse_finder_color = theme.colors.green
 theme.menu_height                   = "16"
 theme.menu_width                    = "140"
 
-theme.layout_txt_tile               = "[t]"
-theme.layout_txt_tileleft           = "[l]"
-theme.layout_txt_tilebottom         = "[b]"
-theme.layout_txt_tiletop            = "[tt]"
-theme.layout_txt_fairv              = "[fv]"
-theme.layout_txt_fairh              = "[fh]"
-theme.layout_txt_spiral             = "[s]"
-theme.layout_txt_dwindle            = "[d]"
-theme.layout_txt_max                = "[m]"
-theme.layout_txt_fullscreen         = "[F]"
-theme.layout_txt_magnifier          = "[M]"
-theme.layout_txt_floating           = "[|]"
 
-theme.submenu_icon                  = themes_dir .. "/icons/submenu.png"
-theme.taglist_squares_sel           = themes_dir .. "/icons/square_sel.png"
-theme.taglist_squares_unsel         = themes_dir .. "/icons/square_unsel.png"
-
-theme.lain_icons         = os.getenv("HOME") .. "/.config/awesome/lain/icons/layout/default/"
-theme.layout_termfair    = theme.lain_icons .. "termfairw.png"
-theme.layout_cascade     = theme.lain_icons .. "cascadew.png"
-theme.layout_cascadetile = theme.lain_icons .. "cascadetilew.png"
-theme.layout_centerwork  = theme.lain_icons .. "centerworkw.png"
 
 theme.tasklist_disable_icon         = true
 theme.tasklist_floating             = ""
 theme.tasklist_maximized_horizontal = ""
 theme.tasklist_maximized_vertical   = ""
 
--- lain related
-theme.layout_txt_termfair           = "[termfair]"
-theme.layout_txt_uselessfair        = "[ufv]"
-theme.layout_txt_uselessfairh       = "[ufh]"
-theme.layout_txt_uselessdwindle     = "[ud]"
-theme.layout_txt_uselesstile        = "[ut]"
-theme.layout_txt_centerwork         = "[cw]"
-theme.layout_txt_browse             = "[b]"
-theme.layout_txt_cascade            = "[cascade]"
-theme.layout_txt_centerfair         = "[cf]"
 
 --{{{ APW
 theme.apw_fg_color = {type = 'linear', from = {0, 0}, to={40,0},

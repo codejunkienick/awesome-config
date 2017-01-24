@@ -14,17 +14,15 @@ awful.rules     = require("awful.rules")
 local wibox     = require("wibox")
 local beautiful = require("beautiful")
 local naughty   = require("naughty")
-local drop      = require("scratchdrop")
 local lain      = require("lain")
-local vain      = require("vain")
 local battary   = require("battery")
 local tyrannical = require("tyrannical")
-local blingbling = require("blingbling")
 local APW        = require("apw/widget")
 local awesompd = require("awesompd/awesompd")
+local freedesktop   = require("freedesktop")
+local hotkeys_popup = require("awful.hotkeys_popup").widget
 APW.Update()
 
--- }}}
 
 -- {{{ Error handling
 if awesome.startup_errors then
@@ -41,13 +39,11 @@ do
 
         naughty.notify({ preset = naughty.config.presets.critical,
                          title = "Oops, an error happened!",
-                         text = err })
+                         text = tostring(err) })
         in_error = false
     end)
 end
--- }}}
 
--- {{{ Autostart applications
 function run_once(cmd)
   findme = cmd
   firstspace = cmd:find(" ")
@@ -75,309 +71,313 @@ run_once("unclutter -root")
 beautiful.init(os.getenv("HOME") .. "/.config/awesome/theme/theme.lua")
 
 -- common
-modkey     = "Mod4"
-altkey     = "Mod1"
-terminal   = "termite" or "terminator" or "xterm"
-dropdownterm = "termite"
-editor     = os.getenv("EDITOR") or "vim" or "vi"
-editor_cmd = terminal .. " -e " .. editor
+local modkey     = "Mod4"
+local altkey     = "Mod1"
+local terminal   = "termite" or "terminator" or "xterm"
+local dropdownterm = "termite"
+local editor     = os.getenv("EDITOR") or "nvim" or "vi"
+local editor_cmd = terminal .. " -e " .. editor
+
+
+local quakescratch = {}
+for s in screen do
+  quakescratch[s] = lain.util.quake({
+    app     = terminal,
+    name    = "Scratchpad",
+    argname = "--name %s",
+    height  = 0.5,
+    width   = 0.6,
+    vert    = "center",
+    horiz   = "center"
+  })
+end
+
 
 -- user defined
-browser2    = "chromium"
-browser   = "firefox-aurora"
-music_player = "ncmpcpp"
+local browser2    = "chromium"
+local browser   = "firefox-aurora"
+local music_player = "ncmpcpp"
 
 -- lain
 lain.layout.termfair.nmaster = 3
 lain.layout.termfair.ncol    = 1
-
--- vain
-vain.layout.browse.extra_padding = 5
-vain.layout.browse.ncol = 2
-vain.widgets.terminal = terminal
+lain.layout.cascade.offset_x = 8
+lain.layout.cascade.offset_y = 8
+lain.layout.cascade.nmaster = 5
 
 local layouts = {
     lain.layout.cascade,
-    lain.layout.uselessfair.horizontal,
-    lain.layout.uselesstile,
-    lain.layout.uselessfair,
-
     lain.layout.termfair,
-    lain.layout.uselesspiral.dwindle,
     lain.layout.centerwork,
-
+    awful.layout.suit.fair,
     awful.layout.suit.magnifier,
-    lain.layout.centerfair,
-    awful.layout.suit.floating
 }
 -- }}}
-do
-    local conky = nil
 
-    function get_conky(default)
-        if conky and conky.valid then
-            return conky
-        end
-
-        conky = awful.client.iterate(function(c) return c.class == "Conky" end)()
-        return conky or default
-    end
-
-    function raise_conky()
-        get_conky({}).ontop = true
-    end
-
-    function lower_conky()
-        get_conky({}).ontop = false
-    end
-
-    local t = awesome_timer({ timeout = 0.01 })
-    t:connect_signal("timeout", function()
-        t:stop()
-        lower_conky()
-    end)
-    function lower_conky_delayed()
-        t:again()
-    end
-
-    function toggle_conky()
-        local conky = get_conky({})
-        conky.ontop = not conky.ontop
-    end
-end
+-- First, set some settings
+tyrannical.settings.default_layout =  awful.layout.suit.tile.left
+tyrannical.settings.mwfact = 0.66
 tyrannical.tags = {
-            {
-              name        = "term"      ,
-              init        = true        ,
-              screen      = 1,
-              exclusive   = true        ,
-              layout      = layouts[3] ,
-              class       = {"termite", "XTerm"}
-            },
-            {
-              name        = "web"             ,
-              screen      = 1,
-              init        = true              ,
-              exclusive   = false             ,
-              mwfact      = 0.70              ,
-              layout      = layouts[1]       ,
-              class       = {"Firefox", "brave" ,"chromium", "Google-chrome", "Tor Browser", "termite:web", "Midori"}
-            },
-            {
-              name        = "edit"       ,
-              screen      = 1,
-              init        = true        ,
-              exclusive   = true       ,
-              layout      = layouts[3],
-              class       = {"Sublime_text","Vscode","Gvim", "termite:vim", "Emacs"}
-            },
-            {
-              name        = "dev"       ,
-              screen      = 1,
-              init        = true        ,
-              exclusive   = false       ,
-              mwfact      = 0.25,
-              ncol        = 1,
-              layout      = layouts[3],
-              class       = {"jetbrains-pycharm-ce", "jetbrains-pycharm", "jetbrains-webstorm", "MonoDevelop", "Code::Blocks", "Scala IDE", "Codelite", "Atom", "Java", "jetbrains-idea-ce", "LocalTestRunner", "jetbrains-idea-c", "jetbrains-idea", "Code", "jetbrains-rider"}
-            },
-            {
-              name        = "img",
-              init        = true,
-              exclusive   = true,
-              layout      = layouts[1],
-              class       = {"Photoshop.exe", "Inkscape"      , "KolourPaint"    , "Krita"     , "Karbon"       , "Karbon14", "Gimp"}
-            },
-            {
-              name        = "vm"       ,
-              init        = true        ,
-              exclusive   = true       ,
-              init        = false                 ,
-              ncol        = 2,
-              layout      = layouts[3],
-              class       = {"vmware", "VirtualBox", "Android Virtual Device (AVD) Manager", "emulator64-x86", "Genymotion", "Genymotion Player"}
-            },
-            {
-              name        = "docs"     ,
-              screen      = 1,
-              init        = true        ,
-              exclusive   = true        ,
-              layout      = layouts[7] ,
-              mwfact      = 0.65,
-              class       = {
-                      "MuPDF", "llpp"     , "Qpdfview"         , "Evince"    , "EPDFviewer"   , "xpdf",
-                      "Xpdf"          , "libreoffice-writer", "libreoffice-calc", "LibreOffice 5.0", "libreoffice", "libreoffice-startcenter", "libreoffice-impress" }
-            },
-            {
-              name        = "ssh"     ,
-              init        = true        ,
-              exclusive   = true        ,
-              layout      = layouts[7] ,
-              mwfact      = 0.65,
-              class       =  {}
-            },
-            {
-              name        = "dj"     ,
-              init        = false        ,
-              exclusive   = true        ,
-              layout      = layouts[10] ,
-              class       = {"xfreerdp"}
-            },
-            {
-              name        = "files"     ,
-              init        = false        ,
-              exclusive   = true        ,
-              layout      = layouts[10] ,
-              class       = {"Thunar", "Nautilus", "termite:mc"}
-            },
-            -----------------VOLATILE TAGS-----------------------
-            {
-              name = "db",
-              init = false,
-              excluse = true,
-              layout = layouts[10],
-              class = {"Pgadmin3", "Mysql-workbench-bin",}
-            },
-            {
-              name = "games",
-              init = false,
-              excluse = true,
-              layout = layouts[10],
-              no_focus_stealing_in = true ,
-              class = {"Steam"}
-            },
-            {
-              name        = "wine",
-              init        = false                 ,
-              position    = 10                    ,
-              exclusive   = true                  ,
-              layout      = layouts[10] ,
-              class       = {"Wine"}
-            },
-            {
-              name        = "picture"             ,
-              init        = false                 ,
-              position    = 10                    ,
-              exclusive   = true                  ,
-              layout      = awful.layout.suit.max ,
-              class       = {"Digikam"       , "F-Spot"         , "GPicView"  , "ShowPhoto"    , "KPhotoAlbum"}
-            },
-            {
-              name                 = "music"       ,
-              init                 = false         ,
-              position             = 10            ,
-              exclusive            = true          ,
-              layout               = layouts[1]    ,
-              no_focus_stealing_in = true ,
-              class       = {"clementine", "Clementine"}
-            },
-            {
-              name                 = "media"       ,
-              init                 = false         ,
-              position             = 10            ,
-              exclusive            = true          ,
-              layout               = layouts[3]    ,
-              no_focus_stealing_in = true ,
-              class       = {"Mpv", "Amarok"        , "SongBird"       , "last.fm", "Gpodder"   ,"Pragha"}
-            },
-            {
-              name        = "office",
-              init        = false                                          ,
-              position    = 10                                             ,
-              exclusive   = true                                           ,
-              layout      = awful.layout.suit.max                          ,
-              class       = {
-                "OOWriter"      , "OOCalc"         , "OOMath"    , "OOImpress"    , "OOBase"       ,
-                "SQLitebrowser" , "Silverun"       , "Workbench" , "KWord"        , "KSpread"      ,
-                "KPres","Basket", "openoffice.org" , "OpenOffice.*"               , "LibreOffice"
-              }
-              } ,
-              {
-                name        = "chat",
-                init        = false                                          ,
-                position    = 10                                             ,
-                exclusive   = true                                           ,
-                screen      = 1,--config.data().scr.sec or config.data().scr.sec ,
-                --   icon        = utils.tools.invertedIconPath("chat.png")       ,
-                layout      = layouts[3]                         ,
-                class       = {"discord", "Cutegram", "telegram", "Pidgin"        , "Kopete"         , "Skype"}
-              } ,
-              {
-                name        = "mail",
-                init        = false                                          ,
-                position    = 10                                             ,
-                exclusive   = true                                           ,
-                --         screen      = 1,--config.data().scr.sec or config.data().scr.pri     ,
-                --   icon        = utils.tools.invertedIconPath("mail2.png")      ,
-                layout      = awful.layout.suit.max                          ,
-                class       = {"Thunderbird"   , "kmail"          , "evolution" ,}
-              } ,
-              {
-                name        = "conf",
-                init        = false                                          ,
-                position    = 10                                             ,
-                exclusive   = false                                          ,
-                --   icon        = utils.tools.invertedIconPath("tools.png")      ,
-                layout      = layouts[10]                        ,
-                class       = {"Systemsettings", "Pavucontrol", "Android SDK Manager", "gconf-editor", "Arandr"}
-              } ,
-              {
-                name        = "Gimp",
-                init        = false                                          ,
-                position    = 10                                             ,
-                exclusive   = false                                          ,
-                --   icon        = utils.tools.invertedIconPath("image.png")      ,
-                layout      = awful.layout.tile                              ,
-                nmaster     = 1                                              ,
-                incncol     = 10                                             ,
-                ncol        = 2                                              ,
-                mwfact      = 0.00                                           ,
-                class       = {}
-              } ,
-            }
-tyrannical.properties.intrusive = {
+  {
+    name        = "term"      ,
+    init        = true        ,
+    screen      = 1,
+    exclusive   = true        ,
+    layout      = layouts[3] ,
+    class       = {"termite", "XTerm"}
+  },
+  {
+    name        = "web"             ,
+    screen      = 1,
+    init        = true              ,
+    exclusive   = false             ,
+    mwfact      = 0.70              ,
+    layout      = layouts[1]       ,
+    class       = {"Firefox", "brave" ,"chromium", "Google-chrome-unstable", "Google-chrome", "Tor Browser", "termite:web", "Midori"}
+  },
+  {
+    name        = "edit"       ,
+    screen      = 1,
+    init        = true        ,
+    exclusive   = true       ,
+    layout      = layouts[3],
+    class       = {"Sublime_text","Vscode","Gvim", "NyaoVim", "termite:vim", "Emacs"}
+  },
+  {
+    name        = "dev"       ,
+    screen      = 1,
+    init        = true        ,
+    exclusive   = false       ,
+    mwfact      = 0.25,
+    ncol        = 1,
+    layout      = layouts[3],
+    class       = {"jetbrains-pycharm-ce", "jetbrains-pycharm", "jetbrains-webstorm", "MonoDevelop", "Code::Blocks", "Scala IDE", "Codelite", "Atom", "Java", "jetbrains-idea-ce", "LocalTestRunner", "jetbrains-idea-c", "jetbrains-idea", "Code", "jetbrains-rider"}
+  },
+  {
+    name        = "img",
+    init        = true,
+    exclusive   = true,
+    layout      = layouts[1],
+    class       = {"Photoshop.exe", "Inkscape"      , "KolourPaint"    , "Krita"     , "Karbon"       , "Karbon14", "Gimp"}
+  },
+  {
+    name        = "vm"       ,
+    init        = true        ,
+    exclusive   = true       ,
+    init        = false                 ,
+    ncol        = 2,
+    layout      = layouts[3],
+    class       = {"vmware", "VirtualBox", "Android Virtual Device (AVD) Manager", "emulator64-x86", "Genymotion", "Genymotion Player"}
+  },
+  {
+    name        = "docs"     ,
+    screen      = 1,
+    init        = true        ,
+    exclusive   = true        ,
+    layout      = layouts[4] ,
+    mwfact      = 0.65,
+    class       = {
+      "MuPDF", "llpp"     , "Qpdfview"         , "Evince"    , "EPDFviewer"   , "xpdf",
+      "Xpdf"          , "libreoffice-writer", "libreoffice-calc", "LibreOffice 5.0", "libreoffice", "libreoffice-startcenter", "libreoffice-impress" }
+    },
+    {
+      name        = "ssh"     ,
+      init        = true        ,
+      exclusive   = true        ,
+      layout      = layouts[4] ,
+      mwfact      = 0.65,
+      class       =  {}
+    },
+    {
+      name        = "dj"     ,
+      init        = false        ,
+      exclusive   = true        ,
+      layout      = layouts[4] ,
+      class       = {"xfreerdp"}
+    },
+    {
+      name        = "files"     ,
+      init        = false        ,
+      exclusive   = true        ,
+      layout      = layouts[4] ,
+      class       = {"Thunar", "Nautilus", "termite:mc"}
+    },
+    -----------------VOLATILE TAGS-----------------------
+    {
+      name = "db",
+      init = false,
+      excluse = true,
+      layout = layouts[4],
+      class = {"Pgadmin3", "Mysql-workbench-bin",}
+    },
+    {
+      name = "games",
+      init = false,
+      excluse = true,
+      layout = layouts[4],
+      no_focus_stealing_in = true ,
+      class = {"Steam"}
+    },
+    {
+      name        = "wine",
+      init        = false                 ,
+      position    = 10                    ,
+      exclusive   = true                  ,
+      layout      = layouts[4] ,
+      class       = {"Wine"}
+    },
+    {
+      name        = "picture"             ,
+      init        = false                 ,
+      position    = 10                    ,
+      exclusive   = true                  ,
+      layout      = awful.layout.suit.max ,
+      class       = {"Digikam"       , "F-Spot"         , "GPicView"  , "ShowPhoto"    , "KPhotoAlbum"}
+    },
+    {
+      name                 = "music"       ,
+      init                 = false         ,
+      position             = 10            ,
+      exclusive            = true          ,
+      layout               = layouts[1]    ,
+      no_focus_stealing_in = true ,
+      class       = {"clementine", "Clementine"}
+    },
+    {
+      name                 = "media"       ,
+      init                 = false         ,
+      position             = 10            ,
+      exclusive            = true          ,
+      layout               = layouts[3]    ,
+      no_focus_stealing_in = true ,
+      class       = {"Mpv", "Amarok"        , "SongBird"       , "last.fm", "Gpodder"   ,"Pragha"}
+    },
+    {
+      name        = "office",
+      init        = false                                          ,
+      position    = 10                                             ,
+      exclusive   = true                                           ,
+      layout      = awful.layout.suit.max                          ,
+      class       = {
+        "OOWriter"      , "OOCalc"         , "OOMath"    , "OOImpress"    , "OOBase"       ,
+        "SQLitebrowser" , "Silverun"       , "Workbench" , "KWord"        , "KSpread"      ,
+        "KPres","Basket", "openoffice.org" , "OpenOffice.*"               , "LibreOffice"
+      }
+    } ,
+    {
+      name        = "chat",
+      init        = false                                          ,
+      position    = 10                                             ,
+      exclusive   = true                                           ,
+      screen      = 1,--config.data().scr.sec or config.data().scr.sec ,
+      --   icon        = utils.tools.invertedIconPath("chat.png")       ,
+      layout      = layouts[3]                         ,
+      class       = {"discord", "Cutegram", "telegram", "Pidgin"        , "Kopete"         , "Skype"}
+    } ,
+    {
+      name        = "mail",
+      init        = false                                          ,
+      position    = 10                                             ,
+      exclusive   = true                                           ,
+      --         screen      = 1,--config.data().scr.sec or config.data().scr.pri     ,
+      --   icon        = utils.tools.invertedIconPath("mail2.png")      ,
+      layout      = awful.layout.suit.max                          ,
+      class       = {"Thunderbird"   , "kmail"          , "evolution" ,}
+    } ,
+    {
+      name        = "conf",
+      init        = false                                          ,
+      position    = 10                                             ,
+      exclusive   = false                                          ,
+      --   icon        = utils.tools.invertedIconPath("tools.png")      ,
+      layout      = layouts[4]                        ,
+      class       = {"Systemsettings", "Pavucontrol", "Android SDK Manager", "gconf-editor", "Arandr"}
+    } ,
+    {
+      name        = "Gimp",
+      init        = false                                          ,
+      position    = 10                                             ,
+      exclusive   = false                                          ,
+      --   icon        = utils.tools.invertedIconPath("image.png")      ,
+      layout      = awful.layout.tile                              ,
+      nmaster     = 1                                              ,
+      incncol     = 10                                             ,
+      ncol        = 2                                              ,
+      mwfact      = 0.00                                           ,
+      class       = {}
+    } ,
+  }
+  tyrannical.properties.intrusive = {
     "Gpick",    "ksnapshot"     , "pinentry"       , "gtksu"     , "kcalc"        , "xcalc"           ,
     "feh"           , "Gradient editor", "About KDE" , "Paste Special", "Background color",
     "kcolorchooser" , "plasmoidviewer" , "plasmaengineexplorer" , "Xephyr" , "kruler"     , "gnome-calculator", "conky", "Conky", "Gnome-pomodoro", "Vlc"
-}
-tyrannical.properties.floating = {
+  }
+  tyrannical.properties.floating = {
     "Gpick", "MPlayer"      , "pinentry"        , "ksnapshot"  , "pinentry"     , "gtksu"          ,
     "xine"         , "feh"             , "kmix"       , "kcalc"        , "xcalc"          ,
     "yakuake"      , "Select Color$"   , "kruler"     , "kcolorchooser", "Paste Special"  ,
     "New Form"     , "Insert Picture"  , "kcharselect", "mythfrontend" , "plasmoidviewer" , "gnome-calculator", "conky", "Conky", "Gnome-pomodoro", "Vlc"
-}
-tyrannical.properties.sticky = {
-  "conky", "Conky", "Vlc"
-}
+  }
+  tyrannical.properties.sticky = {
+    "conky", "Conky", "Vlc"
+  }
 
-tyrannical.properties.ontop = {
+  tyrannical.properties.ontop = {
     "Xephyr"       , "ksnapshot"       , "kruler", "Vlc"
-}
+  }
 
-tyrannical.properties.size_hints_honor = { xterm = false, URxvt = false, aterm = false, sauer_client = false, mythfrontend  = false}
-tyrannical.properties.focusable = { Vlc = false }
-tyrannical.properties.above = { Vlc = true }
+  tyrannical.properties.size_hints_honor = { termite = false, xterm = false, URxvt = false, aterm = false, sauer_client = false, mythfrontend  = false}
+  tyrannical.properties.focusable = { Vlc = false }
+  tyrannical.properties.above = { Vlc = true }
 
 
--- {{{ Wallpaper
-if beautiful.wallpaper then
-    for s = 1, screen.count() do
-        gears.wallpaper.maximized(beautiful.wallpaper, s, true)
+  -- {{{ Wallpaper
+  local function set_wallpaper(s)
+    -- Wallpaper
+    if beautiful.wallpaper then
+      local wallpaper = beautiful.wallpaper
+      -- If wallpaper is a function, call it with the screen
+      if type(wallpaper) == "function" then
+        wallpaper = wallpaper(s)
+      end
+      gears.wallpaper.maximized(wallpaper, s, true)
     end
-end
+  end
 -- }}}
 
 -- {{{ Menu
-mymainmenu = awful.menu.new({ items = require("menugen").build_menu(),
-                              theme = { height = 16, width = 130 }})
+local myawesomemenu = {
+    { "hotkeys", function() return false, hotkeys_popup.show_help end },
+    { "manual", terminal .. " -e man awesome" },
+    { "edit config", string.format("%s -e %s %s", terminal, editor, awesome.conffile) },
+    { "restart", awesome.restart },
+    { "quit", function() awesome.quit() end }
+}
+local mymainmenu = freedesktop.menu.build({
+    before = {
+        { "Awesome", myawesomemenu, beautiful.awesome_icon },
+        -- other triads can be put here
+    },
+    after = {
+        { "Open terminal", terminal },
+        -- other triads can be put here
+    }
+})
 -- }}}
 
 -- {{{ Wibox
-markup = lain.util.markup
-gray   = "#94928F"
+local markup = lain.util.markup
+local gray   = "#94928F"
 
 -- Textclock
-mytextclock = awful.widget.textclock(" %H:%M ")
+local mytextclock = wibox.widget.textclock(" %H:%M ")
+
+-- lain.widgets.calendar.attach(mytextclock, {
+--     notification_preset = {
+--         font = "Tamsyn 10.5",
+--         fg   = white,
+--         bg   = beautiful.bg_normal
+-- }})
 
 -- Calendar
 -- lain.widgets.calendar:attach(mytextclock)
@@ -499,37 +499,28 @@ musicwidget.servers = {
   { modkey, "Pause", musicwidget:command_playpause() } })
   musicwidget:run() -- After all configuration is done, run the widget
 
-netwidget = blingbling.net({interface = "wlp4s0", show_text = false})
-netwidget_adapter = blingbling.net({interface = "wlp0s20u5", show_text = true})
-netwidget_adapter:set_ippopup() 
-netwidget:set_ippopup()
+local netwidget = lain.widgets.net({
+    settings = function()
+        if net_now.state == "up" then net_state = "On"
+        else net_state = "Off" end
+        widget:set_markup(markup(gray, " Net ") .. net_state .. " ")
+    end
+})
 
--- shutdown=blingbling.system.shutdownmenu(beautiful.shutdown,
---                                         beautiful.accept,
---                                         beautiful.cancel)
---
--- reboot=blingbling.system.rebootmenu(beautiful.reboot,
---                                     beautiful.accept,
---                                     beautiful.cancel)
--- lock=blingbling.system.lockmenu() --icons have been set in theme via the theme.bligbling table
--- logout=blingbling.system.logoutmenu() --icons have been set in theme via the theme.blingbling table
-
-volumewidget = blingbling.volume({width = 40, bar =true, show_text = true, label ="$percent%", pulseaudio = true})
-volumewidget:update_master()
-volumewidget:set_master_control()
-
--- Weather
+-- volumewidget = blingbling.volume({width = 40, bar =true, show_text = true, label ="$percent%", pulseaudio = true})
+-- volumewidget:update_master()
+-- volumewidget:set_master_control()
 
 -- Separators
-first = wibox.widget.textbox(markup.font("Tamsyn 4", " "))
-spr = wibox.widget.textbox(' ')
+local first = wibox.widget.textbox(markup.font("Tamsyn 4", " "))
+local spr   = wibox.widget.textbox(' ')
 
 -- Create a wibox for each screen and add it
-mywibox = {}
-mypromptbox = {}
-txtlayoutbox = {}
-mytaglist = {}
-mytasklist = {}
+local mywibox = {}
+local mypromptbox = {}
+local txtlayoutbox = {}
+local mytaglist = {}
+local mytasklist = {}
 mytaglist.buttons = awful.util.table.join(
                     awful.button({ }, 1, awful.tag.viewonly),
                     awful.button({ modkey }, 1, awful.client.movetotag),
@@ -537,6 +528,7 @@ mytaglist.buttons = awful.util.table.join(
                     awful.button({ modkey }, 3, awful.client.toggletag),
                     awful.button({ }, 4, function(t) awful.tag.viewnext(awful.tag.getscreen(t)) end),
                     awful.button({ }, 5, function(t) awful.tag.viewprev(awful.tag.getscreen(t)) end))
+
 mytasklist.buttons = awful.util.table.join(
                      awful.button({ }, 1, function (c)
                                               if c == client.focus then
@@ -572,71 +564,81 @@ mytasklist.buttons = awful.util.table.join(
                                           end))
 
 -- Writes a string representation of the current layout in a textbox widget
-function updatelayoutbox(layout, s)
-    local screen = s or 1
-    local txt_l = beautiful["layout_txt_" .. awful.layout.getname(awful.layout.get(screen))] or ""
-    layout:set_text(txt_l)
+local function update_txt_layoutbox(s)
+    -- Writes a string representation of the current layout in a textbox widget
+    local txt_l = beautiful["layout_txt_" .. awful.layout.getname(awful.layout.get(s))] or ""
+    s.mytxtlayoutbox:set_text(txt_l)
 end
 
-for s = 1, screen.count() do
-    -- Create a promptbox for each screen
-    mypromptbox[s] = awful.widget.prompt()
+awful.screen.connect_for_each_screen(function(s)
+    -- Quake application
 
-    -- Create a textbox widget which will contains a short string representing the
-    -- layout we're using.  We need one layoutbox per screen.
-    txtlayoutbox[s] = wibox.widget.textbox(beautiful["layout_txt_" .. awful.layout.getname(awful.layout.get(s))])
-    awful.tag.attached_connect_signal(s, "property::selected", function ()
-        updatelayoutbox(txtlayoutbox[s], s)
-    end)
-    awful.tag.attached_connect_signal(s, "property::layout", function ()
-        updatelayoutbox(txtlayoutbox[s], s)
-    end)
-    txtlayoutbox[s]:buttons(awful.util.table.join(
-            awful.button({}, 1, function() awful.layout.inc(layouts, 1) end),
-            awful.button({}, 3, function() awful.layout.inc(layouts, -1) end),
-            awful.button({}, 4, function() awful.layout.inc(layouts, 1) end),
-            awful.button({}, 5, function() awful.layout.inc(layouts, -1) end)))
+    -- Wallpaper
+    set_wallpaper(s)
+
+    -- Tags
+    -- awful.tag(tagnames, s, awful.layout.layouts)
+
+    -- Create a promptbox for each screen
+    s.mypromptbox = awful.widget.prompt()
+
+    --[[ Standard layoutbox
+    -- Create an imagebox widget which will contains an icon indicating which layout we're using.
+    -- We need one layoutbox per screen.
+    s.mylayoutbox = awful.widget.layoutbox(s)
+    s.mylayoutbox:buttons(awful.util.table.join(
+                           awful.button({ }, 1, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 3, function () awful.layout.inc(-1) end),
+                           awful.button({ }, 4, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 5, function () awful.layout.inc(-1) end)))
+    --]]
+
+    -- Textual layoutbox
+    s.mylayoutbox = awful.widget.layoutbox(s)
+    s.mylayoutbox:buttons(awful.util.table.join(
+                           awful.button({ }, 1, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 3, function () awful.layout.inc(-1) end),
+                           awful.button({ }, 4, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 5, function () awful.layout.inc(-1) end)))
 
     -- Create a taglist widget
-    mytaglist[s] = awful.widget.taglist(s, awful.widget.taglist.filter.all, mytaglist.buttons)
+    s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, mytaglist.buttons)
 
     -- Create a tasklist widget
-    mytasklist[s] = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
+    s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, mytasklist.buttons)
 
     -- Create the wibox
-    mywibox[s] = awful.wibox({ position = "top", screen = s, height = 18 })
+    s.mywibox = awful.wibar({ position = "top", screen = s, height = 18 })
 
-    -- Widgets that are aligned to the left
-    local left_layout = wibox.layout.fixed.horizontal()
-    left_layout:add(first)
-    left_layout:add(mytaglist[s])
-    left_layout:add(spr)
-    left_layout:add(txtlayoutbox[s])
-    left_layout:add(spr)
-    left_layout:add(mypromptbox[s])
-
-    -- Widgets that are aligned to the right
-    local right_layout = wibox.layout.fixed.horizontal()
-    if s == 1 then right_layout:add(wibox.widget.systray()) end
-    right_layout:add(spr)
-    right_layout:add(mpdwidget)
-    --right_layout:add(mailwidget)
-    right_layout:add(musicwidget.widget)
-    right_layout:add(cpuwidget)
-    right_layout:add(memwidget)
-    right_layout:add(batwidget)
-    right_layout:add(APW)
-    right_layout:add(netwidget)
-    right_layout:add(netwidget_adapter)
-    right_layout:add(mytextclock)
-    -- Now bring it all together (with the tasklist in the middle)
-    local layout = wibox.layout.align.horizontal()
-    layout:set_left(left_layout)
-    layout:set_middle(mytasklist[s])
-    layout:set_right(right_layout)
-
-    mywibox[s]:set_widget(layout)
-end
+    -- Add widgets to the wibox
+    s.mywibox:setup {
+        layout = wibox.layout.align.horizontal,
+        { -- Left widgets
+            layout = wibox.layout.fixed.horizontal,
+            first,
+            s.mytaglist,
+            spr,
+            s.mylayoutbox,
+            --spr,
+            s.mypromptbox,
+            spr,
+        },
+        s.mytasklist, -- Middle widget
+        { -- Right widgets
+            layout = wibox.layout.fixed.horizontal,
+            wibox.widget.systray(),
+            spr,
+            mpdwidget,
+            musicwidget.widget,
+            cpuwidget,
+            memwidget,
+            batwidget,
+            netwidget,
+            APW,
+            mytextclock
+        },
+    }
+end)
 -- }}}
 
 -- {{{ Mouse bindings
@@ -706,9 +708,21 @@ globalkeys = awful.util.table.join(
         end),
 
     -- Show/Hide Wibox
-    awful.key({ modkey }, "b", function ()
-        mywibox[mouse.screen].visible = not mywibox[mouse.screen].visible
+awful.key({ modkey }, "b", function ()
+        for s in screen do
+            s.mywibox.visible = not s.mywibox.visible
+        end
     end),
+    -- On the fly useless gaps change
+    awful.key({ altkey, "Control" }, "+", function () lain.util.useless_gaps_resize(1) end),
+    awful.key({ altkey, "Control" }, "-", function () lain.util.useless_gaps_resize(-1) end),
+
+    -- Dynamic tagging
+    awful.key({ modkey, "Shift" }, "n", function () lain.util.add_tag() end),
+    awful.key({ modkey, "Shift" }, "r", function () lain.util.rename_tag() end),
+    awful.key({ modkey, "Shift" }, "Left", function () lain.util.move_tag(1) end),   -- move to next tag
+    awful.key({ modkey, "Shift" }, "Right", function () lain.util.move_tag(-1) end), -- move to previous tag
+    awful.key({ modkey, "Shift" }, "d", function () lain.util.delete_tag() end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
@@ -723,10 +737,10 @@ globalkeys = awful.util.table.join(
                 client.focus:raise()
             end
         end),
-    awful.key({ altkey, "Shift_L"   }, "l",      function () awful.tag.incmwfact( 0.05)     end),
-    awful.key({ altkey, "Shift_L"   }, "h",      function () awful.tag.incmwfact(-0.05)     end),
-    awful.key({ modkey, "Shift"   }, "l",      function () awful.tag.incnmaster(-1)       end),
-    awful.key({ modkey, "Shift"   }, "h",      function () awful.tag.incnmaster( 1)       end),
+    awful.key({ modkey, "Shift"   }, "t",      function () awful.tag.incmwfact(0.05)     end),
+    awful.key({ modkey, "Shift"   }, "y",      function () awful.tag.incmwfact(-0.05)     end),
+    awful.key({ altkey, "Shift"   }, "l",      function () awful.tag.incnmaster(-1)       end),
+    awful.key({ altkey, "Shift"   }, "h",      function () awful.tag.incnmaster( 1)       end),
     awful.key({ modkey, "Control" }, "l",      function () awful.tag.incncol(-1)          end),
     awful.key({ modkey, "Control" }, "h",      function () awful.tag.incncol( 1)          end),
     awful.key({ modkey,           }, "space",  function () awful.layout.inc(layouts,  1)  end),
@@ -747,19 +761,22 @@ globalkeys = awful.util.table.join(
    awful.key({ modkey }, "Right", function () awful.client.moveresize( 20,   0,   0,   0) end),
 
     -- Standard program
-    awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end),
+    awful.key({ modkey,           }, "Return", function () awful.spawn(terminal) end),
     awful.key({ modkey, "Control" }, "r",      awesome.restart),
     awful.key({ modkey, "Shift"   }, "o",      awesome.quit),
 
     -- Dropdown terminal
-    awful.key({ modkey,	          }, "z",      function () drop(dropdownterm, "center", "center", 0.6, 0.55) end),
+  awful.key({ modkey,           }, "z",
+            function () quakescratch[mouse.screen]:toggle() end,
+            {description = "Scratchpad", group = "applications"}),
+    --awful.key({ modkey,	          }, "z",      function () drop(dropdownterm, "center", "center", 0.6, 0.55) end),
 
     -- Widgets popups
     -- awful.key({ altkey,           }, "c",      function () lain.widgets.calendar:show(7) end),
     -- awful.key({ altkey,           }, "h",      function () fshomeupd.show(7) end),
     -- awful.key({ altkey,           }, "w",      function () yawn.show(7) end),
 
-   awful.key({ }, "Print", function() awful.util.spawn_with_shell("import -window root ~/Screenshots/shot-(date +%F)--(date +%T).png") end),
+   awful.key({ }, "Print", function() awful.spawn_with_shell("import -window root ~/Screenshots/shot-(date +%F)--(date +%T).png") end),
    awful.key({ }, "XF86AudioRaiseVolume",  APW.Up),
    awful.key({ }, "XF86AudioLowerVolume",  APW.Down),
    awful.key({ }, "XF86MonBrightnessUp", function() awful.util.spawn_with_shell("xbacklight + 10%") end),
@@ -796,30 +813,28 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey }, "c", function () os.execute("xsel -p -o | xsel -i -b") end),
 
     -- User programs
-    awful.key({ modkey }, "q", function () awful.util.spawn(browser) end),
-    awful.key({ modkey }, "i", function () awful.util.spawn(browser2) end),
+    awful.key({ modkey }, "q", function () awful.spawn(browser) end),
+    awful.key({ modkey }, "i", function () awful.spawn(browser2) end),
 
+ -- Default
     -- Prompt
-    awful.key({ modkey }, "r", function () mypromptbox[mouse.screen]:run({ prompt = "Run: ", hooks = {
-                {{         },"Return",function(command)
-                    local result = awful.util.spawn(command)
-                    mypromptbox[mouse.screen].widget:set_text(type(result) == "string" and result or "")
-                    return true
-                end},
-                {{"Mod1"   },"Return",function(command)
-                    local result = awful.util.spawn(command,{intrusive=true})
-                    mypromptbox[mouse.screen].widget:set_text(type(result) == "string" and result or "")
-                    return true
-                end},
-                {{"Shift"  },"Return",function(command)
-                    local result = awful.util.spawn(command,{intrusive=true,ontop=true,floating=true})
-                    mypromptbox[mouse.screen].widget:set_text(type(result) == "string" and result or "")
-                    return true
-                end}
-            }},
-            mypromptbox[mouse.screen].widget,nil,
-            awful.completion.shell,
-            awful.util.getdir("cache") .. "/history") end)
+    awful.key({ modkey }, "r", function () awful.screen.focused().mypromptbox:run() end,
+              {description = "run prompt", group = "launcher"}),
+
+    -- awful.key({ modkey }, "x",
+    --           function ()
+    --               awful.prompt.run {
+    --                 prompt       = "Run Lua code: ",
+    --                 textbox      = awful.screen.focused().mypromptbox.widget,
+    --                 exe_callback = awful.util.eval,
+    --                 history_path = awful.util.get_cache_dir() .. "/history_eval"
+    --               }
+    --           end,
+    --           {description = "lua execute prompt", group = "awesome"}),
+    -- Menubar
+    awful.key({ modkey }, "p", function() menubar.show() end,
+              {description = "show the menubar", group = "launcher"})
+    --]]
     -- awful.key({ modkey }, "x",
     --           function ()
     --               awful.prompt.run({ prompt = "Run Lua code: " },
@@ -832,68 +847,86 @@ globalkeys = awful.util.table.join(
 
 
 clientkeys = awful.util.table.join(
-    awful.key({ modkey,           }, "f",      function (c) c.fullscreen = not c.fullscreen  end),
-    awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end),
-    awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ),
-    awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end),
-    awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
-    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
+    awful.key({ altkey, "Shift"   }, "m",      lain.util.magnify_client                         ),
+    awful.key({ modkey,           }, "f",
+        function (c)
+            c.fullscreen = not c.fullscreen
+            c:raise()
+        end,
+        {description = "toggle fullscreen", group = "client"}),
+    awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end,
+              {description = "close", group = "client"}),
+    awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ,
+              {description = "toggle floating", group = "client"}),
+    awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,
+              {description = "move to master", group = "client"}),
+    awful.key({ modkey,           }, "o",      function (c) c:move_to_screen()               end,
+              {description = "move to screen", group = "client"}),
+    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
+              {description = "toggle keep on top", group = "client"}),
     awful.key({ modkey,           }, "n",
         function (c)
             -- The client currently has the input focus, so it cannot be
             -- minimized, since minimized clients can't have the focus.
             c.minimized = true
-        end),
+        end ,
+        {description = "minimize", group = "client"}),
     awful.key({ modkey,           }, "m",
         function (c)
-            c.maximized_horizontal = not c.maximized_horizontal
-            c.maximized_vertical   = not c.maximized_vertical
-        end)
+            c.maximized = not c.maximized
+            c:raise()
+        end ,
+        {description = "maximize", group = "client"})
 )
 
 -- Bind all key numbers to tags.
--- be careful: we use keycodes to make it works on any keyboard layout.
+-- Be careful: we use keycodes to make it works on any keyboard layout.
 -- This should map on the top row of your keyboard, usually 1 to 9.
 for i = 1, 9 do
     globalkeys = awful.util.table.join(globalkeys,
         -- View tag only.
         awful.key({ modkey }, "#" .. i + 9,
                   function ()
-                        local screen = mouse.screen
-                        local tag = awful.tag.gettags(screen)[i]
+                        local screen = awful.screen.focused()
+                        local tag = screen.tags[i]
                         if tag then
-                           awful.tag.viewonly(tag)
+                           tag:view_only()
                         end
-                  end),
-        -- Toggle tag.
+                  end,
+                  {description = "view tag #"..i, group = "tag"}),
+        -- Toggle tag display.
         awful.key({ modkey, "Control" }, "#" .. i + 9,
                   function ()
-                      local screen = mouse.screen
-                      local tag = awful.tag.gettags(screen)[i]
+                      local screen = awful.screen.focused()
+                      local tag = screen.tags[i]
                       if tag then
                          awful.tag.viewtoggle(tag)
                       end
-                  end),
+                  end,
+                  {description = "toggle tag #" .. i, group = "tag"}),
         -- Move client to tag.
         awful.key({ modkey, "Shift" }, "#" .. i + 9,
                   function ()
                       if client.focus then
-                          local tag = awful.tag.gettags(client.focus.screen)[i]
+                          local tag = client.focus.screen.tags[i]
                           if tag then
-                              awful.client.movetotag(tag)
+                              client.focus:move_to_tag(tag)
                           end
                      end
-                  end),
-        -- Toggle tag.
+                  end,
+                  {description = "move focused client to tag #"..i, group = "tag"}),
+        -- Toggle tag on focused client.
         awful.key({ modkey, "Control", "Shift" }, "#" .. i + 9,
                   function ()
                       if client.focus then
-                          local tag = awful.tag.gettags(client.focus.screen)[i]
+                          local tag = client.focus.screen.tags[i]
                           if tag then
-                              awful.client.toggletag(tag)
+                              client.focus:toggle_tag(tag)
                           end
                       end
-                  end))
+                  end,
+                  {description = "toggle focused client on tag #" .. i, group = "tag"})
+    )
 end
 
 clientbuttons = awful.util.table.join(
@@ -913,11 +946,18 @@ awful.rules.rules = {
       properties = { border_width = beautiful.border_width,
                      border_color = beautiful.border_normal,
                      focus = awful.client.focus.filter,
+                     placement = awful.placement.no_overlap+awful.placement.no_offscreen,
+                     screen = awful.screen.preferred,
+                     raise = true,
                      keys = clientkeys,
                      maximized_vertical   = false,
                      maximized_horizontal = false,
                      buttons = clientbuttons,
 	                   size_hints_honor = false } },
+    -- Titlebars
+    { rule_any = { type = { "dialog", "normal" } },
+      properties = { titlebars_enabled = false } },
+
        { rule = { class = "Conky" },
        properties = {
          floating = true,
@@ -972,96 +1012,82 @@ awful.rules.rules = {
         awful.client.property.set(c, "overwrite_class", "termite:vim")
         end
     },
---
---     { rule = { class = "Iron" },
---           properties = { tag = tags[1][1] } },
---
---     { rule = { class = "plugin-container" },
---           properties = { tag = tags[1][1] } },
---
--- 	  { rule = { class = "Gimp" },
---      	    properties = { tag = tags[1][5] } },
---
--- 	  { rule = { class = "Vlc" },
---      	    properties = { tag = tags[1][5]
---                         } },
---
--- 	  { rule = { class = "Acestreamplayer" },
---      	    properties = { tag = tags[1][5]
---                         } },
---
--- 	  { rule = { class = "Plaidchat"  },
---      	    properties = { tag = tags[1][7] } },
---
---     { rule = { class = "Gimp", role = "gimp-image-window" },
---           properties = { maximized_horizontal = true,
---                          maximized_vertical = true } },
 }
 -- }}}
 
 -- {{{ Signals
--- signal function to execute when a new client appears.
-local sloppyfocus_last = {c=nil}
-client.connect_signal("manage", function (c, startup)
-    -- Enable sloppy focus
-    client.connect_signal("mouse::enter", function(c)
-         if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
-            and awful.client.focus.filter(c)
-            and c.focusable == true then
-             -- Skip focusing the client if the mouse wasn't moved.
-             if c ~= sloppyfocus_last.c then
-                 client.focus = c
-                 sloppyfocus_last.c = c
-             end
-         end
-     end)
+-- Signal function to execute when a new client appears.
+client.connect_signal("manage", function (c)
+    -- Set the windows at the slave,
+    -- i.e. put it at the end of others instead of setting it master.
+    -- if not awesome.startup then awful.client.setslave(c) end
 
-    local titlebars_enabled = false
-    if titlebars_enabled and (c.type == "normal" or c.type == "dialog") then
-        -- buttons for the titlebar
-        local buttons = awful.util.table.join(
-                awful.button({ }, 1, function()
-                    client.focus = c
-                    c:raise()
-                    awful.mouse.client.move(c)
-                end),
-                awful.button({ }, 3, function()
-                    client.focus = c
-                    c:raise()
-                    awful.mouse.client.resize(c)
-                end)
-                )
+    if awesome.startup and
+      not c.size_hints.user_position
+      and not c.size_hints.program_position then
+        -- Prevent clients from being unreachable after screen count changes.
+        awful.placement.no_offscreen(c)
+    end
+end)
 
-        -- widgets that are aligned to the right
-        local right_layout = wibox.layout.fixed.horizontal()
-        right_layout:add(awful.titlebar.widget.floatingbutton(c))
-        right_layout:add(awful.titlebar.widget.maximizedbutton(c))
-        right_layout:add(awful.titlebar.widget.stickybutton(c))
-        right_layout:add(awful.titlebar.widget.ontopbutton(c))
-        right_layout:add(awful.titlebar.widget.closebutton(c))
+-- Add a titlebar if titlebars_enabled is set to true in the rules.
+client.connect_signal("request::titlebars", function(c)
+    -- buttons for the titlebar
+    local buttons = awful.util.table.join(
+        awful.button({ }, 1, function()
+            client.focus = c
+            c:raise()
+            awful.mouse.client.move(c)
+        end),
+        awful.button({ }, 3, function()
+            client.focus = c
+            c:raise()
+            awful.mouse.client.resize(c)
+        end)
+    )
 
-        -- the title goes in the middle
-        local middle_layout = wibox.layout.flex.horizontal()
-        local title = awful.titlebar.widget.titlewidget(c)
-        title:set_align("center")
-        middle_layout:add(title)
-        middle_layout:buttons(buttons)
+    awful.titlebar(c, {size = 16}) : setup {
+        { -- Left
+            awful.titlebar.widget.iconwidget(c),
+            buttons = buttons,
+            layout  = wibox.layout.fixed.horizontal
+        },
+        { -- Middle
+            { -- Title
+                align  = "center",
+                widget = awful.titlebar.widget.titlewidget(c)
+            },
+            buttons = buttons,
+            layout  = wibox.layout.flex.horizontal
+        },
+        { -- Right
+            awful.titlebar.widget.floatingbutton (c),
+            awful.titlebar.widget.maximizedbutton(c),
+            awful.titlebar.widget.stickybutton   (c),
+            awful.titlebar.widget.ontopbutton    (c),
+            awful.titlebar.widget.closebutton    (c),
+            layout = wibox.layout.fixed.horizontal()
+        },
+        layout = wibox.layout.align.horizontal
+    }
+end)
 
-        -- now bring it all together
-        local layout = wibox.layout.align.horizontal()
-        layout:set_right(right_layout)
-        layout:set_middle(middle_layout)
-
-        awful.titlebar(c,{size=16}):set_widget(layout)
+-- Enable sloppy focus, so that focus follows mouse.
+client.connect_signal("mouse::enter", function(c)
+    if awful.layout.get(c.screen) ~= awful.layout.suit.magnifier
+        and awful.client.focus.filter(c) then
+        client.focus = c
     end
 end)
 
 -- No border for maximized clients
 client.connect_signal("focus",
     function(c)
-        if c.maximized_horizontal == true and c.maximized_vertical == true and not awful.rules.match(c, {class = "VirtualBox"}) then
-            c.border_color = beautiful.border_normal
-        else
+        if c.maximized_horizontal == true and c.maximized_vertical == true then
+            c.border_width = 0
+        -- no borders if only 1 client visible
+        elseif #awful.client.visible(mouse.screen) > 1 then
+            c.border_width = beautiful.border_width
             c.border_color = beautiful.border_focus
         end
     end)
@@ -1069,24 +1095,24 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- }}}
 
 -- {{{ Arrange signal handler
-for s = 1, screen.count() do screen[s]:connect_signal("arrange", function ()
-        local clients = awful.client.visible(s)
-        local layout  = awful.layout.getname(awful.layout.get(s))
-
-        if #clients > 0 then -- Fine grained borders and floaters control
-            for _, c in pairs(clients) do -- Floaters always have borders
-                if awful.client.floating.get(c) or layout == "floating" then
-                    c.border_width = beautiful.border_width
-
-                -- No borders with only one visible client
-                elseif #clients == 1 or layout == "max" then
-                    c.border_width = 0
-                else
-                    c.border_width = beautiful.border_width
-                end
-            end
-        end
-      end)
-end
+-- for s = 1, screen.count() do screen[s]:connect_signal("arrange", function ()
+--         local clients = awful.client.visible(s)
+--         local layout  = awful.layout.getname(awful.layout.get(s))
+--
+--         if #clients > 0 then -- Fine grained borders and floaters control
+--             for _, c in pairs(clients) do -- Floaters always have borders
+--                 if awful.client.floating.get(c) or layout == "floating" then
+--                     c.border_width = beautiful.border_width
+--
+--                 -- No borders with only one visible client
+--                 elseif #clients == 1 or layout == "max" then
+--                     c.border_width = 0
+--                 else
+--                     c.border_width = beautiful.border_width
+--                 end
+--             end
+--         end
+--       end)
+-- end
 
 -- }}}
